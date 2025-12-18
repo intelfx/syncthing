@@ -64,11 +64,11 @@ func WithDeleteRetention(d time.Duration) Option {
 }
 
 func Open(path string, opts ...Option) (*DB, error) {
-	pragmas := []string{
-		"journal_mode = WAL",
-		"optimize = 0x10002",
-		"auto_vacuum = INCREMENTAL",
-		fmt.Sprintf("application_id = %d", applicationIDMain),
+	pragmas := []baseDBPragma{
+		{K: "journal_mode", V: "WAL"},
+		{K: "optimize", V: "0x10002"},
+		{K: "auto_vacuum", V: "INCREMENTAL"},
+		{K: "application_id", V: fmt.Sprintf("%d", applicationIDMain)},
 	}
 	schemas := []string{
 		"sql/schema/common/*",
@@ -114,12 +114,12 @@ func Open(path string, opts ...Option) (*DB, error) {
 // is not a safe mode of operation for normal processing, use only for bulk
 // inserts with a close afterwards.
 func OpenForMigration(path string) (*DB, error) {
-	pragmas := []string{
-		"journal_mode = OFF",
-		"foreign_keys = 0",
-		"synchronous = 0",
-		"locking_mode = EXCLUSIVE",
-		fmt.Sprintf("application_id = %d", applicationIDMain),
+	pragmas := []baseDBPragma{
+		{K: "journal_mode", V: "OFF"},
+		{K: "foreign_keys", V: "0"},
+		{K: "synchronous", V: "0"},
+		{K: "locking_mode", V: "EXCLUSIVE"},
+		{K: "application_id", V: fmt.Sprintf("%d", applicationIDMain)},
 	}
 	schemas := []string{
 		"sql/schema/common/*",

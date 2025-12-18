@@ -23,11 +23,11 @@ type folderDB struct {
 }
 
 func openFolderDB(folder, path string, deleteRetention time.Duration) (*folderDB, error) {
-	pragmas := []string{
-		"journal_mode = WAL",
-		"optimize = 0x10002",
-		"auto_vacuum = INCREMENTAL",
-		fmt.Sprintf("application_id = %d", applicationIDFolder),
+	pragmas := []baseDBPragma{
+		{"journal_mode", "WAL"},
+		{"optimize", "0x10002"},
+		{"auto_vacuum", "INCREMENTAL"},
+		{"application_id", fmt.Sprintf("%d", applicationIDFolder)},
 	}
 	schemas := []string{
 		"sql/schema/common/*",
@@ -63,12 +63,12 @@ func openFolderDB(folder, path string, deleteRetention time.Duration) (*folderDB
 // is not a safe mode of operation for normal processing, use only for bulk
 // inserts with a close afterwards.
 func openFolderDBForMigration(folder, path string, deleteRetention time.Duration) (*folderDB, error) {
-	pragmas := []string{
-		"journal_mode = OFF",
-		"foreign_keys = 0",
-		"synchronous = 0",
-		"locking_mode = EXCLUSIVE",
-		fmt.Sprintf("application_id = %d", applicationIDFolder),
+	pragmas := []baseDBPragma{
+		{K: "journal_mode", V: "OFF"},
+		{K: "foreign_keys", V: "0"},
+		{K: "synchronous", V: "0"},
+		{K: "locking_mode", V: "EXCLUSIVE"},
+		{K: "application_id", V: fmt.Sprintf("%d", applicationIDFolder)},
 	}
 	schemas := []string{
 		"sql/schema/common/*",

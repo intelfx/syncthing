@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/url"
@@ -49,7 +50,17 @@ type baseDB struct {
 	tplInput      map[string]any
 }
 
-func openBase(path string, maxOpenConns, maxIdleConns int, pragmas, schemaScripts, migrationScripts []string) (*baseDB, error) {
+type baseDBPragma struct {
+	K string
+	V string
+}
+
+func openBase(
+	path string,
+	maxOpenConns, maxIdleConns int,
+	pragmas []baseDBPragma,
+	schemaScripts, migrationScripts []string,
+) (*baseDB, error) {
 	// Open the database with options to enable foreign keys and recursive
 	// triggers (needed for the delete+insert triggers on row replace).
 	pathURL := url.URL{
@@ -65,9 +76,11 @@ func openBase(path string, maxOpenConns, maxIdleConns int, pragmas, schemaScript
 	sqlDB.SetMaxOpenConns(maxOpenConns)
 	sqlDB.SetMaxIdleConns(maxIdleConns)
 
+	// Execute database-global pragmas directly
 	for _, pragma := range pragmas {
-		if _, err := sqlDB.Exec("PRAGMA " + pragma); err != nil {
-			return nil, wrap(err, "PRAGMA "+pragma)
+		stmt := fmt.Sprintf("PRAGMA %s = %s", pragma.K, pragma.V)
+		if _, err := sqlDB.Exec(stmt); err != nil {
+			return nil, wrap(err, stmt)
 		}
 	}
 
