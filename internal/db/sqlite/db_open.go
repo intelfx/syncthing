@@ -30,6 +30,7 @@ const (
 
 	minDeleteRetention = 24 * time.Hour
 	pageCacheSize      = 1 << 30
+	maxMmapSize        = ^uintptr(0) >> 1
 )
 
 // maxOpenConns is sized for handling spikes. The primary driver is the

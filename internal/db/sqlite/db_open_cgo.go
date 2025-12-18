@@ -59,6 +59,11 @@ func init() {
 			)
 		}
 	}
+	if os.Getenv("SYNCTHING_MMAP") != "" {
+		connPragmas = append(connPragmas,
+			baseDBPragma{"mmap_size", fmt.Sprintf("%d", maxMmapSize)},
+		)
+	}
 
 	sql.Register(dbDriver, &sqlite3.SQLiteDriver{
 		ConnectHook: func(conn *sqlite3.SQLiteConn) error {
