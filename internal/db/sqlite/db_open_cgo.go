@@ -9,10 +9,36 @@
 package sqlite
 
 import (
-	_ "github.com/mattn/go-sqlite3" // register sqlite3 database driver
+	"database/sql"
+	"fmt"
+	"os"
+
+	"github.com/mattn/go-sqlite3" // also registers sqlite3 database driver
 )
 
 const (
-	dbDriver      = "sqlite3"
+	dbDriver      = "sqlite3_ex"
 	commonOptions = "_fk=true&_rt=true&_sync=1&_txlock=immediate"
 )
+
+var connPragmas []baseDBPragma
+
+func init() {
+	connPragmas = []baseDBPragma{
+		{"temp_store", "MEMORY"},
+	}
+
+	sql.Register(dbDriver, &sqlite3.SQLiteDriver{
+		ConnectHook: func(conn *sqlite3.SQLiteConn) error {
+			// Connection-scoped pragmas: must be applied on every sqlite3* handle.
+			for _, pragma := range connPragmas {
+				stmt := fmt.Sprintf("PRAGMA %s = %s", pragma.K, pragma.V)
+				if _, err := conn.Exec(stmt, nil); err != nil {
+					return wrap(err, stmt)
+				}
+			}
+
+			return nil
+		},
+	})
+}
