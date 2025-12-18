@@ -11,9 +11,13 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
+	"strings"
 
+	"github.com/docker/go-units"
 	"github.com/mattn/go-sqlite3" // also registers sqlite3 database driver
+	"github.com/syncthing/syncthing/internal/slogutil"
 )
 
 const (
@@ -26,6 +30,34 @@ var connPragmas []baseDBPragma
 func init() {
 	connPragmas = []baseDBPragma{
 		{"temp_store", "MEMORY"},
+	}
+
+	if cacheStr := os.Getenv("SYNCTHING_CACHE"); cacheStr != "" {
+		cacheStr = strings.TrimSpace(cacheStr)
+		cacheStr = strings.ToLower(cacheStr)
+
+		var cacheBytes int
+		if cacheStr == "1" || cacheStr == "true" || cacheStr == "on" {
+			cacheBytes = pageCacheSize
+		} else if cacheStr == "0" || cacheStr == "false" || cacheStr == "off" {
+			cacheBytes = 0
+		} else if ret, err := units.RAMInBytes(cacheStr); err == nil {
+			cacheBytes = int(ret)
+		} else {
+			slog.Warn(
+				"Failed to parse environment variable",
+				"name", "SYNCTHING_CACHE",
+				"value", cacheStr,
+				slogutil.Error(err),
+			)
+			cacheBytes = -1
+		}
+
+		if cacheBytes >= 0 {
+			connPragmas = append(connPragmas,
+				baseDBPragma{"cache_size", fmt.Sprintf("%d", -(cacheBytes / 1024))},
+			)
+		}
 	}
 
 	sql.Register(dbDriver, &sqlite3.SQLiteDriver{

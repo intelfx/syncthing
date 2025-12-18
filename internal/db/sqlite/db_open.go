@@ -29,6 +29,7 @@ const (
 	maxIdleConns = 4
 
 	minDeleteRetention = 24 * time.Hour
+	pageCacheSize      = 1 << 30
 )
 
 // maxOpenConns is sized for handling spikes. The primary driver is the

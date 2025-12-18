@@ -51,6 +51,8 @@ require (
 	sigs.k8s.io/yaml v1.6.0
 )
 
+require github.com/docker/go-units v0.5.0
+
 require (
 	github.com/Azure/go-ntlmssp v0.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
